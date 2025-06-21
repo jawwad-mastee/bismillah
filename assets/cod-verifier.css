@@ -1,0 +1,569 @@
+/* COD Verifier Styles */
+#cod-verifier-wrapper,
+#cod-verifier-wrapper-active {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    width: 100% !important;
+    margin: 20px 0 !important;
+    clear: both;
+    display: block !important;
+    position: relative;
+    z-index: 10;
+}
+
+/* CRITICAL: Ensure the verification box appears OUTSIDE and ABOVE the flex container */
+.wc-block-checkout__actions_row {
+    margin-top: 20px !important;
+    clear: both;
+}
+
+#cod-verifier-wrapper-active {
+    margin-bottom: 30px !important;
+    order: -1; /* Ensure it appears first if inside any flex container */
+}
+
+/* ===== NEW WARNING MESSAGE STYLES ===== */
+.cod-verification-warning {
+    width: 100% !important;
+    margin: 15px 0 !important;
+    clear: both;
+    display: block;
+    position: relative;
+    z-index: 5;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.cod-warning-content {
+    background: rgba(239, 68, 68, 0.5); /* Light red with 50% opacity */
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+    animation: cod-warning-pulse 2s ease-in-out infinite;
+}
+
+.cod-warning-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.cod-warning-text {
+    color: rgb(12, 12, 12);
+    font-weight: bold;
+    font-size: 20px;
+    line-height: 1.4;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Subtle pulse animation */
+@keyframes cod-warning-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .cod-warning-content {
+        padding: 10px 12px;
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    .cod-warning-text {
+        font-size: 13px;
+    }
+    
+    .cod-warning-icon {
+        font-size: 14px;
+    }
+}
+
+/* Ensure proper placement after checkout buttons */
+.woocommerce-checkout .cod-verification-warning,
+.wc-block-checkout .cod-verification-warning {
+    margin-top: 15px !important;
+    margin-bottom: 10px !important;
+    clear: both;
+    width: 100% !important;
+    position: relative;
+    z-index: 5;
+}
+
+/* ===== MULTI-COUNTRY PHONE INPUT STYLES ===== */
+.cod-phone-input-group {
+    display: flex !important;
+    gap: 8px !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+}
+
+.cod-country-select {
+    min-width: 100px !important;
+    padding: 10px 8px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 6px !important;
+    font-size: 14px !important;
+    background: white !important;
+    cursor: pointer !important;
+    transition: border-color 0.2s !important;
+}
+
+.cod-country-select:focus {
+    outline: none !important;
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+}
+
+.cod-phone-input {
+    flex: 1 !important;
+    min-width: 150px !important;
+}
+
+.cod-send-otp-btn {
+    white-space: nowrap !important;
+    min-width: 100px !important;
+}
+
+.cod-phone-help {
+    margin-top: 6px !important;
+    width: 100% !important;
+}
+
+.cod-phone-help small {
+    color: #6b7280 !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+}
+
+/* Timer and disabled button styles */
+.cod-btn-timer-active {
+    background-color: #e5e7eb !important;
+    color: #6b7280 !important;
+    cursor: not-allowed !important;
+    opacity: 0.7 !important;
+}
+
+.cod-btn-timer-active:hover {
+    background-color: #e5e7eb !important;
+    color: #6b7280 !important;
+}
+
+/* ===== EXISTING STYLES CONTINUE ===== */
+
+.cod-verifier-container {
+    background: #ffffff;
+    border-radius: 11px;
+    width: 100%;
+}
+
+.cod-verifier-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cod-header-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.cod-icon {
+    font-size: 24px;
+    background: rgba(255, 255, 255, 0.2);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cod-header-text h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.cod-header-text p {
+    margin: 4px 0 0 0;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.cod-test-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.cod-verifier-content {
+    padding: 20px;
+}
+
+.cod-section {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid #e2e8f0;
+}
+
+.cod-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.cod-section-icon {
+    font-size: 18px;
+}
+
+.cod-section-header h4 {
+    margin: 0;
+    flex: 1;
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.cod-step-badge {
+    background: #667eea;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.cod-form-group {
+    margin-bottom: 14px;
+}
+
+.cod-form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #374151;
+    font-size: 14px;
+}
+
+.cod-input-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.cod-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+    background: white;
+}
+
+.cod-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.cod-btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.cod-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.cod-btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+.cod-btn-primary:hover:not(:disabled) {
+    background: #5a67d8;
+}
+
+.cod-btn-success {
+    background: #10b981;
+    color: white;
+}
+
+.cod-btn-success:hover:not(:disabled) {
+    background: #059669;
+}
+
+.cod-btn-success.verified {
+    background: #155724;
+}
+
+.cod-btn-warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.cod-btn-warning:hover:not(:disabled) {
+    background: #d97706;
+}
+
+.cod-btn-warning.verified {
+    background: #28a745;
+    color: white;
+}
+
+.cod-btn-large {
+    padding: 12px 24px;
+    font-size: 15px;
+    width: 100%;
+}
+
+.cod-token-info {
+    background: #f3f4f6;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 14px;
+    border-left: 3px solid #667eea;
+}
+
+.cod-token-info p {
+    margin: 0;
+    color: #374151;
+    font-size: 14px;
+}
+
+.cod-checkbox-group {
+    margin: 14px 0;
+}
+
+.cod-checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    color: #374151;
+}
+
+.cod-checkbox-label input[type="checkbox"] {
+    display: none;
+}
+
+.cod-checkmark {
+    width: 18px;
+    height: 18px;
+    border: 1px solid #d1d5db;
+    border-radius: 3px;
+    margin-right: 10px;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.cod-checkbox-label input[type="checkbox"]:checked + .cod-checkmark {
+    background: #667eea;
+    border-color: #667eea;
+}
+
+.cod-checkbox-label input[type="checkbox"]:checked + .cod-checkmark::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.cod-status-summary {
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+}
+
+.cod-status-summary h4 {
+    margin: 0 0 12px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.cod-status-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.cod-status-item:last-child {
+    border-bottom: none;
+}
+
+.cod-status-icon {
+    margin-right: 10px;
+    font-size: 14px;
+}
+
+.cod-status-text {
+    flex: 1;
+    font-weight: 500;
+    color: #374151;
+    font-size: 14px;
+}
+
+.cod-status-badge {
+    padding: 3px 10px;
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.cod-status-badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.cod-status-badge.verified {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.cod-message {
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    display: none;
+}
+
+.cod-message.success {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+    display: block;
+}
+
+.cod-message.error {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    display: block;
+}
+
+/* CRITICAL: Ensure proper placement above checkout buttons */
+.woocommerce-checkout #cod-verifier-wrapper-active,
+.wc-block-checkout #cod-verifier-wrapper-active {
+    margin-bottom: 30px !important;
+    clear: both;
+    width: 100% !important;
+    position: relative;
+    z-index: 10;
+}
+
+/* Force display when COD is selected */
+#cod-verifier-wrapper-active[style*="display: none"] {
+    display: block !important;
+}
+
+/* Ensure the actions row appears AFTER the verification box */
+.wc-block-checkout__actions_row {
+    order: 999 !important;
+    margin-top: 20px !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .cod-phone-input-group {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    
+    .cod-country-select {
+        min-width: auto !important;
+        width: 100% !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .cod-phone-input {
+        min-width: auto !important;
+        width: 100% !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .cod-send-otp-btn {
+        min-width: auto !important;
+        width: 100% !important;
+    }
+    
+    .cod-input-group {
+        flex-direction: column;
+    }
+    
+    .cod-input {
+        margin-bottom: 8px;
+    }
+    
+    .cod-btn {
+        width: 100%;
+    }
+    
+    .cod-section-header {
+        flex-wrap: wrap;
+    }
+    
+    .cod-step-badge {
+        order: -1;
+        margin-bottom: 8px;
+    }
+    
+    .cod-header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+}
+
+/* Ensure checkout form layout doesn't break */
+.woocommerce-checkout-review-order,
+.wc-block-components-checkout-place-order-button,
+#place_order {
+    clear: both;
+    margin-top: 10px;
+}
+
+/* Additional specificity for block checkout */
+.wp-block-woocommerce-checkout #cod-verifier-wrapper-active {
+    width: 100% !important;
+    margin: 20px 0 30px 0 !important;
+    display: block !important;
+}
