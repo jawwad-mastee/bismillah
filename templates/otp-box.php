@@ -103,6 +103,22 @@ $otp_timer_duration = get_option('cod_verifier_otp_timer_duration', 30);
                     </button>
                 </div>
                 
+                <!-- Container for payment feedback messages and animation -->
+                <div id="token-payment-feedback" style="display: none; text-align: center; margin-top: 20px;">
+                    <!-- Success Animation Element -->
+                    <div id="success-animation" style="display: none;">
+                        <!-- Attractive SVG checkmark animation -->
+                        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2" style="width: 80px; height: 80px; margin: 0 auto;">
+                            <circle cx="65.1" cy="65.1" r="62.1" fill="none" stroke="#28a745" stroke-width="6" stroke-miterlimit="10" style="stroke-dasharray: 390; stroke-dashoffset: 390; animation: circle-animation 1s ease-in-out forwards;"/>
+                            <polyline fill="none" stroke="#28a745" stroke-width="6" stroke-linecap="round" stroke-miterlimit="10" points="100.2,40.2 51.5,88.8 29.8,67.5" style="stroke-dasharray: 100; stroke-dashoffset: 100; animation: checkmark-animation 0.5s ease-in-out 0.8s forwards;"/>
+                        </svg>
+                        <p style="color: #28a745; font-weight: bold; margin-top: 10px; animation: fade-in 0.5s ease-in-out 1.3s forwards; opacity: 0;">Payment Successful!</p>
+                    </div>
+                    
+                    <!-- Refund Information Message -->
+                    <p id="refund-info-message" style="margin-top: 10px; font-size: 1em; color: #333; display: none;"></p>
+                </div>
+                
                 <div class="cod-checkbox-group">
                     <label class="cod-checkbox-label">
                         <input type="checkbox" id="cod_token_confirmed" name="cod_token_confirmed" value="1">
@@ -139,6 +155,60 @@ $otp_timer_duration = get_option('cod_verifier_otp_timer_duration', 30);
         </div>
     </div>
 </div>
+
+<!-- CSS for success animation -->
+<style>
+@keyframes circle-animation {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes checkmark-animation {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes fade-in {
+    to {
+        opacity: 1;
+    }
+}
+
+.animate-success {
+    animation: bounce 0.6s ease-in-out;
+}
+
+@keyframes bounce {
+    0%, 20%, 60%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    80% {
+        transform: translateY(-5px);
+    }
+}
+
+/* Status badge styles */
+.cod-status-badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.cod-status-badge.verified,
+.cod-status-badge.success {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.cod-status-badge.failed {
+    background: #fee2e2;
+    color: #dc2626;
+}
+</style>
 
 <!-- Hidden data for JavaScript -->
 <script type="text/javascript">

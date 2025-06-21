@@ -82,6 +82,9 @@ class CODVerifier {
         // Server-side validation with HIGHEST PRIORITY
         add_action('woocommerce_checkout_process', array($this, 'validate_checkout'), 1);
         
+        // Fallback order status update
+        add_action('woocommerce_checkout_order_processed', array($this, 'update_order_status_after_token_payment'), 10, 1);
+        
         // Clean up after order
         add_action('woocommerce_thankyou', array($this, 'cleanup_session'));
         
@@ -99,7 +102,16 @@ class CODVerifier {
         if (is_checkout()) {
             wp_enqueue_script('jquery');
             
-            // CRITICAL FIX: Enqueue QRCode.js library
+            // CRITICAL: Enqueue Razorpay Checkout JS library
+            wp_enqueue_script(
+                'razorpay-checkout',
+                'https://checkout.razorpay.com/v1/checkout.js',
+                array('jquery'),
+                null,
+                true
+            );
+            
+            // CRITICAL: Enqueue QRCode.js library
             wp_enqueue_script(
                 'qrcode-js',
                 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
@@ -108,11 +120,11 @@ class CODVerifier {
                 true
             );
             
-            // Main verification script
+            // Main verification script with Razorpay dependency
             wp_enqueue_script(
                 'cod-verifier-script',
                 COD_VERIFIER_PLUGIN_URL . 'assets/script.js',
-                array('jquery', 'qrcode-js'),
+                array('jquery', 'qrcode-js', 'razorpay-checkout'),
                 COD_VERIFIER_VERSION,
                 true
             );
@@ -125,6 +137,15 @@ class CODVerifier {
                 COD_VERIFIER_VERSION
             );
             
+            // Set temporary order ID for Razorpay Order creation
+            if (WC()->session) {
+                $temp_order_id = WC()->session->get('cod_verifier_temp_order_id');
+                if (!$temp_order_id) {
+                    $temp_order_id = 'temp_' . time() . '_' . wp_rand(1000, 9999);
+                    WC()->session->set('cod_verifier_temp_order_id', $temp_order_id);
+                }
+            }
+            
             // Localize script with AJAX data
             wp_localize_script('cod-verifier-script', 'codVerifier', array(
                 'ajaxUrl' => admin_url('admin-ajax.php'),
@@ -134,6 +155,7 @@ class CODVerifier {
                 'testMode' => get_option('cod_verifier_test_mode', '1'),
                 'allowedRegions' => get_option('cod_verifier_allowed_regions', 'india'),
                 'otpTimerDuration' => get_option('cod_verifier_otp_timer_duration', 30),
+                'wooOrderId' => WC()->session ? WC()->session->get('cod_verifier_temp_order_id') : 'temp_' . time(),
             ));
         }
     }
@@ -218,6 +240,36 @@ class CODVerifier {
         }
     }
     
+    /**
+     * Update COD order status to processing if token payment was verified (fallback via session).
+     * Hooked to woocommerce_checkout_order_processed.
+     *
+     * @param int $order_id The order ID.
+     */
+    public function update_order_status_after_token_payment($order_id) {
+        // Start session if not started
+        if (!session_id()) {
+            session_start();
+        }
+        
+        // Check if token was paid based on session variable
+        $token_paid = isset($_SESSION['cod_token_paid']) ? $_SESSION['cod_token_paid'] : false;
+        
+        // If token was paid and payment method is COD, update order status to processing
+        if ($token_paid) {
+            $order = wc_get_order($order_id);
+            
+            // Check if the order exists, is COD, and status is not already processing/completed
+            if ($order && $order->get_payment_method() === 'cod' && $order->get_status() !== 'processing' && $order->get_status() !== 'completed') {
+                $order->update_status('processing', __('COD Token payment verified via session fallback. Order status updated.', 'cod-verifier'));
+                error_log('COD Verifier: Order ' . $order_id . ' status updated to processing via checkout_order_processed hook (session fallback).');
+            }
+            
+            // Clean up the session variable after use
+            unset($_SESSION['cod_token_paid']);
+        }
+    }
+    
     public function cleanup_session($order_id) {
         // Clean up session variables
         if (isset($_SESSION['cod_otp'])) unset($_SESSION['cod_otp']);
@@ -227,6 +279,11 @@ class CODVerifier {
         if (isset($_SESSION['cod_token_paid'])) unset($_SESSION['cod_token_paid']);
         if (isset($_SESSION['cod_payment_link_id'])) unset($_SESSION['cod_payment_link_id']);
         if (isset($_SESSION['cod_payment_link_created'])) unset($_SESSION['cod_payment_link_created']);
+        
+        // Clean up WooCommerce session
+        if (WC()->session) {
+            WC()->session->__unset('cod_verifier_temp_order_id');
+        }
     }
     
     public function admin_configuration_notices() {
