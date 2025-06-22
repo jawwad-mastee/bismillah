@@ -7,7 +7,9 @@ jQuery(document).ready(function($) {
         otpVerified: false,
         tokenPaid: false,
         currentTimer: null,
-        paymentInProgress: false
+        paymentInProgress: false,
+        statusPollingInterval: null,
+        currentPaymentId: null
     };
     
     // Initialize COD Verifier when payment method changes
@@ -18,6 +20,8 @@ jQuery(document).ready(function($) {
             showCODVerifier();
         } else {
             hideCODVerifier();
+            // Clear any polling when switching away from COD
+            clearStatusPolling();
         }
     }
     
@@ -268,9 +272,14 @@ jQuery(document).ready(function($) {
                 // Payment successful - handle immediately
                 console.log('Razorpay Payment Successful:', razorpay_response);
                 
+                // Store payment ID for polling
+                codVerifierState.currentPaymentId = razorpay_response.razorpay_payment_id;
+                
                 // Show immediate UI feedback
                 displaySuccessAnimation();
-                displayRefundMessage();
+                
+                // Start polling for payment status
+                startPaymentStatusPolling(razorpay_response.razorpay_payment_id);
                 
                 // Verify payment on server
                 verifyPaymentOnServer(
@@ -278,9 +287,6 @@ jQuery(document).ready(function($) {
                     razorpay_response.razorpay_order_id,
                     razorpay_response.razorpay_signature
                 );
-                
-                // Auto-close popup after 5 seconds
-                setTimeout(hidePaymentPopup, 5000);
             },
             "prefill": {
                 "name": orderData.customer_name || "",
@@ -313,6 +319,81 @@ jQuery(document).ready(function($) {
         rzp.open();
     }
     
+    // NEW: Start payment status polling
+    function startPaymentStatusPolling(paymentId) {
+        console.log('Starting payment status polling for:', paymentId);
+        
+        // Clear any existing polling
+        clearStatusPolling();
+        
+        codVerifierState.statusPollingInterval = setInterval(function() {
+            checkPaymentStatus(paymentId);
+        }, 3000); // Poll every 3 seconds
+        
+        // Stop polling after 5 minutes to prevent infinite polling
+        setTimeout(function() {
+            clearStatusPolling();
+        }, 300000); // 5 minutes
+    }
+    
+    // NEW: Check payment status via AJAX
+    function checkPaymentStatus(paymentId) {
+        $.ajax({
+            url: codVerifier.ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'cod_check_payment_status',
+                nonce: codVerifier.nonce,
+                payment_id: paymentId
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success && response.data.status === 'captured') {
+                    console.log('Payment status confirmed as captured');
+                    
+                    // Stop polling
+                    clearStatusPolling();
+                    
+                    // Update UI to success
+                    handlePaymentSuccess();
+                }
+            },
+            error: function() {
+                console.log('Payment status check failed, will retry...');
+            }
+        });
+    }
+    
+    // NEW: Handle payment success
+    function handlePaymentSuccess() {
+        codVerifierState.tokenPaid = true;
+        
+        // Update UI elements
+        updateFrontendStatus('success');
+        updateTokenStatus('verified');
+        
+        // Show success message with refund info
+        displayRefundMessage();
+        
+        // Enable place order button
+        enablePlaceOrderButton();
+        
+        // Auto-close popup after 5 seconds
+        setTimeout(function() {
+            hidePaymentPopup();
+        }, 5000);
+        
+        showMessage('#cod_token_message', '✅ Payment verified successfully! ₹1 refund initiated automatically.', 'success');
+    }
+    
+    // Clear status polling
+    function clearStatusPolling() {
+        if (codVerifierState.statusPollingInterval) {
+            clearInterval(codVerifierState.statusPollingInterval);
+            codVerifierState.statusPollingInterval = null;
+        }
+    }
+    
     // Verify payment on server
     function verifyPaymentOnServer(paymentId, orderId, signature) {
         console.log('Sending payment details to server for verification...');
@@ -331,14 +412,7 @@ jQuery(document).ready(function($) {
             success: function(response) {
                 if (response.success) {
                     console.log('Server verification successful.');
-                    
-                    // Update UI to success state
-                    codVerifierState.tokenPaid = true;
-                    updateFrontendStatus('success');
-                    updateTokenStatus('verified');
-                    enablePlaceOrderButton();
-                    
-                    showMessage('#cod_token_message', response.data, 'success');
+                    // The polling will handle the UI update
                 } else {
                     console.error('Server verification failed:', response.data);
                     showMessage('#cod_token_message', 'Payment verification failed. Please contact support.', 'error');
@@ -355,25 +429,37 @@ jQuery(document).ready(function($) {
     
     // Display success animation
     function displaySuccessAnimation() {
-        $('#token-payment-feedback').show();
-        $('#success-animation').show().addClass('animate-success');
-        console.log('Success animation displayed.');
+        var $feedback = $('#token-payment-feedback');
+        var $animation = $('#success-animation');
+        
+        if ($feedback.length && $animation.length) {
+            $feedback.show();
+            $animation.show().addClass('animate-success');
+            console.log('Success animation displayed.');
+        }
     }
     
     // Display refund message
     function displayRefundMessage() {
-        $('#refund-info-message').text('Your ₹1 token payment was successful. The amount will be refunded automatically.').show();
-        console.log('Refund message displayed.');
+        var $refundMsg = $('#refund-info-message');
+        if ($refundMsg.length) {
+            $refundMsg.text('✅ Your payment is successful. Your money will be refunded shortly.').show();
+            console.log('Refund message displayed.');
+        }
     }
     
     // Hide payment popup
     function hidePaymentPopup() {
-        $('#cod-verifier-wrapper-active').fadeOut();
-        // Reset feedback elements
-        $('#token-payment-feedback').hide();
-        $('#success-animation').hide().removeClass('animate-success');
-        $('#refund-info-message').hide();
-        console.log('Payment popup hidden.');
+        // Don't hide the entire verification wrapper, just reset feedback elements
+        var $feedback = $('#token-payment-feedback');
+        var $animation = $('#success-animation');
+        var $refundMsg = $('#refund-info-message');
+        
+        if ($feedback.length) $feedback.hide();
+        if ($animation.length) $animation.hide().removeClass('animate-success');
+        if ($refundMsg.length) $refundMsg.hide();
+        
+        console.log('Payment feedback elements hidden.');
     }
     
     // Update frontend status
@@ -399,9 +485,9 @@ jQuery(document).ready(function($) {
     
     // Enable Place Order button
     function enablePlaceOrderButton() {
-        var $placeOrderButton = $('#place_order, button[name="woocommerce_checkout_place_order"]');
+        var $placeOrderButton = $('#place_order, button[name="woocommerce_checkout_place_order"], .wc-block-components-checkout-place-order-button');
         if ($placeOrderButton.length) {
-            $placeOrderButton.prop('disabled', false);
+            $placeOrderButton.prop('disabled', false).removeClass('disabled');
             console.log('Place Order button enabled.');
         } else {
             console.warn('Could not find Place Order button to enable.');
@@ -496,5 +582,10 @@ jQuery(document).ready(function($) {
     // Handle checkout form updates
     $(document.body).on('updated_checkout', function() {
         initCODVerifier();
+    });
+    
+    // Cleanup on page unload
+    $(window).on('beforeunload', function() {
+        clearStatusPolling();
     });
 });

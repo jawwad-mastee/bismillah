@@ -20,6 +20,10 @@ class CODVerifierAjax {
         add_action('wp_ajax_cod_verify_token_payment_server', array($this, 'verify_token_payment_server'));
         add_action('wp_ajax_nopriv_cod_verify_token_payment_server', array($this, 'verify_token_payment_server'));
         
+        // NEW: Payment status checker for polling
+        add_action('wp_ajax_cod_check_payment_status', array($this, 'check_payment_status'));
+        add_action('wp_ajax_nopriv_cod_check_payment_status', array($this, 'check_payment_status'));
+        
         // Enhanced webhook handler for payment.captured
         add_action('wp_ajax_cod_razorpay_webhook', array($this, 'handle_webhook'));
         add_action('wp_ajax_nopriv_cod_razorpay_webhook', array($this, 'handle_webhook'));
@@ -480,6 +484,68 @@ class CODVerifierAjax {
             $error_message = isset($result['error']['description']) ? $result['error']['description'] : __('Failed to create payment order. Please check plugin settings and logs.', 'cod-verifier');
             error_log('COD Verifier Razorpay Order Creation API Error: ' . ($body ?? 'Unknown Error'));
             wp_send_json_error($error_message);
+        }
+    }
+    
+    // NEW: Check payment status for polling
+    public function check_payment_status() {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['nonce'], 'cod_verifier_nonce')) {
+            wp_send_json_error(__('Security check failed.', 'cod-verifier'));
+            return;
+        }
+        
+        $payment_id = sanitize_text_field($_POST['payment_id'] ?? '');
+        
+        if (empty($payment_id)) {
+            wp_send_json_error(__('Payment ID is required.', 'cod-verifier'));
+            return;
+        }
+        
+        $test_mode = get_option('cod_verifier_test_mode', '1');
+        
+        if ($test_mode === '1') {
+            // Test mode - simulate captured status
+            wp_send_json_success(array(
+                'status' => 'captured',
+                'message' => __('Payment status checked successfully (Test Mode)', 'cod-verifier')
+            ));
+            return;
+        }
+        
+        // Production mode - check actual payment status
+        $key_id = get_option('cod_verifier_razorpay_key_id', '');
+        $key_secret = get_option('cod_verifier_razorpay_key_secret', '');
+        
+        if (empty($key_id) || empty($key_secret)) {
+            wp_send_json_error(__('Razorpay not configured.', 'cod-verifier'));
+            return;
+        }
+        
+        // Make API call to check payment status
+        $response = wp_remote_get("https://api.razorpay.com/v1/payments/{$payment_id}", array(
+            'headers' => array(
+                'Authorization' => 'Basic ' . base64_encode($key_id . ':' . $key_secret),
+            ),
+            'timeout' => 30
+        ));
+        
+        if (is_wp_error($response)) {
+            error_log('COD Verifier Payment Status Check WP Error: ' . $response->get_error_message());
+            wp_send_json_error(__('Failed to check payment status.', 'cod-verifier'));
+            return;
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $result = json_decode($body, true);
+        
+        if (isset($result['status'])) {
+            wp_send_json_success(array(
+                'status' => $result['status'],
+                'message' => __('Payment status checked successfully', 'cod-verifier')
+            ));
+        } else {
+            wp_send_json_error(__('Failed to get payment status.', 'cod-verifier'));
         }
     }
     
